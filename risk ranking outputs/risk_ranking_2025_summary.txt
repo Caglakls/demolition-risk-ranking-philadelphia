@@ -1,0 +1,29 @@
+DEMOLITION RISK RANKING, RISK YEAR 2025
+====================================================
+
+Scored population           : 535,000 parcels with a building
+Primary model               : combined_strict XGBoost (frozen)
+Fishtown parcels            : 5,455
+
+Model agreement (carry into the MFA as uncertainty)
+  logistic vs XGBoost spearman   : 0.7014
+  top-1% overlap                 : 0.428
+
+Extrapolation check, market_value_change_1yr blanked
+  spearman vs primary            : 0.9920
+  top-1% overlap                 : 0.937
+
+Concentration of risk, citywide
+  top   0.1%  =     535 parcels   min score 0.98251
+  top   0.5%  =   2,675 parcels   min score 0.94009
+  top   1.0%  =   5,350 parcels   min score 0.88881
+  top   5.0%  =  26,750 parcels   min score 0.55587
+  top  10.0%  =  53,500 parcels   min score 0.36929
+
+Fishtown share of the citywide high-risk groups
+  top   1.0%  contains    66 Fishtown parcels (1.21% of Fishtown stock)
+  top   5.0%  contains   334 Fishtown parcels (6.12% of Fishtown stock)
+  top  10.0%  contains   880 Fishtown parcels (16.13% of Fishtown stock)
+
+Scores are relative rankings, not calibrated probabilities.
+Do not sum them to estimate a demolition count.

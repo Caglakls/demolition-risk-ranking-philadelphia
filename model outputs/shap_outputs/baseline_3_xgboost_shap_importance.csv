@@ -1,0 +1,6 @@
+specification,feature,mean_absolute_shap
+baseline_3,log_market_value,0.7755338
+baseline_3,prior_demos_300ft_3yr,0.5385584
+baseline_3,land_to_improvement_ratio,0.28399315
+baseline_3,land_share,0.20802453
+baseline_3,market_value_change_1yr,0.15761602

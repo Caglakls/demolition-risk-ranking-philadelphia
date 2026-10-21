@@ -1,0 +1,78 @@
+ROLLING-ORIGIN MODEL COMPARISON (Philadelphia)
+==================================================
+
+Ranked on PR-AUC after converting each test year to a common
+within-year percentile scale. Raw pooled PR-AUC mixes six
+separately trained models whose score scales are not comparable;
+the research use is ranking parcels within a year.
+
+  Specification: combined_extended
+  Model: xgboost
+  PR-AUC (within-year percentile): 0.074523
+  PR-AUC (raw pooled): 0.073291
+  PR-AUC lift over prevalence: 94.75
+  ROC-AUC: 0.9450
+  Top-10% capture: 0.841
+  Top-20% capture: 0.907
+  Yearly PR-AUC sd: 0.013398
+
+Do not select the final model from this line alone. Check:
+1. yearly fold stability (std_yearly_pr_auc, min_yearly_roc_auc);
+2. whether combined_extended beats combined_compact, i.e. whether
+   the new neighbourhood and vacancy features earn their place;
+3. whether the gain survives combined_strict, which removes
+   new_construction, zoning_use and expired;
+4. coefficient and SHAP plausibility;
+5. logistic-XGBoost ranking overlap.
+
+Reminder: scores are relative rankings, not calibrated
+probabilities. Do not report a score of 0.7 as a 70% chance.
+
+
+
+
+--------------------
+
+The header paragraph
+"Raw pooled PR-AUC mixes six separately trained models whose score scales are not comparable"
+
+Rolling-origin doesn't fit one model. It fits six — train 2015–18 → test 2019, train 2015–19 → test 2020, and so on. Each produces probabilities for its own test year.
+
+When you pool all six years of predictions into one metric, you're mixing scores from six different models. Model A might centre its scores around 0.3 and Model B around 0.6, purely because they saw different training data. Pooling then partly measures score-scale drift between models rather than ranking quality.
+
+The fix is to convert each year's scores to a percentile within that year — parcel ranked 1st of 526,867, 2nd, 3rd — before pooling. That's on a common 0–100 scale regardless of what each model's raw numbers looked like. It's also what you actually do downstream: rank parcels within a year and take the top slice. This was §11.5 of your Fishtown notes; I made it the default sort rather than a post-hoc check.
+
+Here the two agree closely (0.0745 vs 0.0733), which is itself reassuring — it means the score scales didn't drift much.
+
+The metrics
+PR-AUC 0.0733 — precision-recall area. Looks tiny, and that's expected: at a 0.077% event rate, random guessing scores about 0.00077. Never report this number without its baseline.
+
+Lift over prevalence 94.75 — the honest version of the above. The model ranks ~95× better than chance. Fishtown's combined model was 15×.
+
+ROC-AUC 0.9450 — pick one demolished parcel and one surviving parcel at random; the model ranks the demolished one higher 94.5% of the time. This is the number you compare to your old 0.745, and it's the direct answer to your earlier question about getting past 0.80.
+
+Top-10% capture 0.841 — score every parcel, take the highest-risk 10%, and that group contains 84% of all demolitions that actually happened. Fishtown was 38%. This is the metric that matters most for your MFA, because your workflow is exactly "take the top N and compute their materials."
+
+Top-20% capture 0.907 — widening to 20% gets you 91%. Note the diminishing return: doubling the group adds only 7 points. That says the risk is concentrated, which is good for you — you can work with a small slice.
+
+Yearly PR-AUC sd 0.013398 — the spread across the six test years. Small relative to the mean of 0.073, meaning no single year is carrying the result. This is the metric I added specifically because of Fishtown, where the 2021 fold (7 events, PR-AUC 0.189) dominated everything.
+
+The five checks — and why my recommendation differs from this file
+The script deliberately prints the numerically top line and then refuses to call it the winner. Working through the checks is what produced my different recommendation:
+
+Check	Result
+1. Yearly stability	Passes. ROC-AUC 0.924–0.960 across all six folds.
+2. Does combined_extended beat combined_compact?	Yes — 0.0733 vs 0.0607 PR-AUC, and three of the top four SHAP features are new ones. The added features earn their place.
+3. Does the gain survive combined_strict?	Yes, almost entirely — 0.0697 vs 0.0733, ROC 0.9429 vs 0.9450, top-10% 84.0% vs 84.1%.
+4. Coefficient and SHAP plausibility	SHAP is coherent. Logistic has a collinearity problem — use it for direction only.
+5. Logistic–XGBoost overlap	Spearman 0.69, 56% top-decile overlap. Carry into MFA sensitivity.
+Check 3 is why I recommended combined_strict over the line this file prints. Dropping new_construction, zoning_use and expired — the three features that either sit too close to an already-made redevelopment decision or aren't time-safe at all — costs 0.002 in ROC-AUC. That's nothing, and it buys you a model where nobody can argue the performance came from features that were quietly reading the outcome.
+
+The file names combined_extended because it sorts on one number. You have the other four checks, so you can make the better call.
+
+The final warning
+"Do not report a score of 0.7 as a 70% chance"
+
+XGBoost was trained with scale_pos_weight, which deliberately reweights the rare positive class so the model can learn from 5,249 events among 5.3M rows. That reweighting inflates the output numbers. A parcel scoring 0.70 is near the top of the ranking, not 70% likely to be demolished — the true annual rate for even the highest-risk parcels is a few percent.
+
+This matters concretely for your MFA: do not sum raw scores to estimate how many buildings will be demolished. It would overstate the count enormously. Use the ranking plus explicit low/medium/high scenarios, as §16 of your Fishtown notes already sets out.

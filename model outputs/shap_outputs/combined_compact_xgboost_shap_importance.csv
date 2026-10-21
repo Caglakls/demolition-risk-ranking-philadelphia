@@ -1,0 +1,15 @@
+specification,feature,mean_absolute_shap
+combined_compact,years_since_last_violation,1.0121258
+combined_compact,prior_demos_300ft_3yr,0.5621363
+combined_compact,log_market_value,0.46735066
+combined_compact,severe_violation_case_count_3yr,0.40331057
+combined_compact,land_to_improvement_ratio,0.22052607
+combined_compact,years_since_last_permit,0.21332546
+combined_compact,land_share,0.21266584
+combined_compact,market_value_change_1yr,0.15759017
+combined_compact,violation_case_count_3yr,0.09025862
+combined_compact,zoning_use_count_3yr,0.089724906
+combined_compact,investment_count_3yr,0.08354329
+combined_compact,new_construction_count_3yr,0.04829763
+combined_compact,expired_count_3yr,0.038887076
+combined_compact,permit_count_3yr,0.0060253455
